@@ -62,7 +62,7 @@ async fn save_image(mut payload: Multipart) -> impl Responder
         // if the data is present in the option we assigin it to the img_buffer 
         Some(data)=> data,
         // if there is no data present we end the excution and retun failed message to the used
-        None=> return HttpResponse::Ok().body("Fail tp Parse third Field in the Post")
+        None=> return HttpResponse::Ok().body("Fail to Parse third Field in the Post")
     }; 
     // here we used the file_manger::create_file to create file with the information we extracted above
     // the method return true if it successed and false other wise

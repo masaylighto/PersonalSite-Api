@@ -27,7 +27,7 @@ pub async fn get_bytes(field:Result<Option<Field>,MultipartError>)->Option<Vec<u
         Ok(data) =>data,        
         Err(_) => 
         {
-            println!("Fail to Parse Payload First Result Field in the form {}",line!() );
+            log(&format!("Fail to Parse Payload First Result Field in the form {}",line!() ));
             return None;
         }
     };
@@ -44,7 +44,7 @@ async fn get_field_bytes(field:Option<Field>)->Option<Vec<u8>>
         
         None =>
         {
-            println!("Fail to Parse Payload  First Option Field in the form {}",line!() );
+            log(&format!("Fail to Parse Payload  First Option Field in the form {}",line!() ));
             return None;
         }
     };

@@ -1,6 +1,8 @@
 /// this file used to parse post requst of multipart/form-data
 use actix_multipart::{Field, MultipartError, };
 use futures_util::TryStreamExt;
+
+use super::loger:: log;
 /// this method take only one paramter which can be get bu using trynext on variable of  multipart which recived from the post request ,
 /// return string that repesnt tha data
 pub async fn get_string(payload:Result<Option<Field>,MultipartError>)->Option<String>
@@ -66,7 +68,7 @@ async fn get_field_bytes(field:Option<Field>)->Option<Vec<u8>>
                 {                    
                     break
                 }      
-                println!("Fail to Parse Payload First Result Field in the form {}",line!() );   
+                log(&format!("Fail to Parse Payload First Result Field in the form {}",line!() ));   
                 return  None;   
             }
         };

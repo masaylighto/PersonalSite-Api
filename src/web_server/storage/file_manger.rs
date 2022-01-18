@@ -55,3 +55,20 @@ pub async fn read_file(file_path:&String) ->Result<Vec<u8>,String>
     // of it successed return the buffer
     Ok(buffer)
 }
+pub async fn read_file_as_string(path:&String)->Option<String>
+{
+    //we read file data from the file into vec<u8> then we use match to extact it from result struct 
+    let content = match  read_file(&path).await
+    {
+        Ok(buffer)=>buffer,
+        Err(_)=>
+        {
+        return None;
+        }
+    }; 
+    // convert it from vec<u8> into Cow<string> cause we are returing a css or js or any other type of resource
+    let content =String::from_utf8_lossy(&content);
+    //convert Cow<String> into String
+    let content =format!("{}",content);
+    Some(content)
+}

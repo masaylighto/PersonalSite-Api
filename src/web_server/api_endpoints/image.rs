@@ -1,25 +1,21 @@
 use actix_multipart::{Multipart};
 use actix_web::{ HttpResponse, get, Responder, post, web};
 use futures_util::TryStreamExt;
-use serde::Deserialize;
-
 use crate::web_server::{file_manger, form_parser};
-#[derive(Deserialize)]
-/// stract that implemented for the get_image_as_byte_array get request
-struct FileInfo 
-{
-    path: String,
-}
+
+use super::loger::log;
+
 /// this method return  buffer of bytes that represent the img to the client
-#[get("/GetImageAsByteArray")]
-// web::Query<FileInfo> paramter will parse the http request of type git into the field of the struct named FileInfo
-async fn get_image_as_byte_array(request: web::Query<FileInfo>) -> impl Responder 
+#[get("{folder}/images/{file}")]
+// web::Path<(String,String)> paramter will parse the http request of type get 
+async fn dynamic_img_loader(url:web::Path<(String,String)>) -> impl Responder 
 {
+    let url=url.into_inner();
     // we use the method file_manger::read_file which read the data of img you passed it path 
     // the return type of the methos is Result<Vec<u8>,String> 
     // string is returned when there is error and it indicate the error and we return it to the client
     // the vec<u8> represnt the img bytes and we return it to the client
-   match file_manger::read_file(&request.path).await
+   match file_manger::read_file(&format!("front_end/{}/images/{}",url.0,url.1)).await
    {
         Ok(data)=>
         {
@@ -27,6 +23,7 @@ async fn get_image_as_byte_array(request: web::Query<FileInfo>) -> impl Responde
         },
         Err(err_msg) => 
         {
+            log(&format!("Error on Line {} : {}",line!(),err_msg));
             return HttpResponse::Ok().body(err_msg);
         },
    }

@@ -1,5 +1,7 @@
 use actix_web::{App, HttpServer};
 
+use self::db_context::{DbContext};
+
 #[path = "web_server/storage/file_manger.rs"]
 mod file_manger;
 #[path = "web_server/parsers/form_parser.rs"]
@@ -10,6 +12,8 @@ mod page;
 mod image;
 #[path = "web_server/storage/loger.rs"]
 mod loger;
+#[path = "web_server/storage/database/db_context.rs"]
+mod db_context;
 
 
 
@@ -17,6 +21,11 @@ mod loger;
 #[actix_web::main]
 pub async fn start_the_server()-> std::io::Result<()>
 {
+
+    let db= db_context::DbContext::new("127.0.0.1","root","","ali_miracle").unwrap();
+    
+    db.is_user_exist(&"Ali",&"Ali");
+  
     // start new instance form the server and set the main there api endpoint method 
     HttpServer::new(|| {
         App::new()

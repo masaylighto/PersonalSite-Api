@@ -5,7 +5,7 @@ use crate::web_server::{file_manger, form_parser};
 
 use super::loger::log;
 
-/// this method return  buffer of bytes that represent the img to the client
+/// this method return  buffer of bytes that represent the requested img to the client
 #[get("{folder}/images/{file}")]
 // web::Path<(String,String)> paramter will parse the http request of type get 
 async fn dynamic_img_loader(url:web::Path<(String,String)>) -> impl Responder 

@@ -1,5 +1,3 @@
-use std::string;
-
 /// this modual hold the responsiblity to deal with the database
 
 
@@ -62,37 +60,68 @@ impl DbContext
       
       
     }
-
-    /// this method check if user is exist 
-    pub fn is_user_exist(mut self,username:&str,password:&str)->bool
-    {
-        //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
-       let statement=match self.connection.prep("SELECT COUNT(*) FROM ACCOUNTS WHERE USERNAME=:user_name AND PASSWORD=:pass_word")       
+       /// used to excute sql query and get data
+       pub fn excute(mut self,query:&str,params:Params)->bool
        {
+   
+           //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
+           let statement=match self.connection.prep(query)       
+           {
+               Ok(data) => data,
+               Err(err_msg) => 
+               {
+                   log(&format!("Error on line {} in db_context: {}",line!(),err_msg));
+                   return false;
+               },
+           };   
+           //excute the paramitrized query with exec_drop which will return result struct with no data 
+           // we will use result to detrimine if the excution was completed successfully
+           let result=   self.connection.exec_drop(statement,params);
+           //the result come as Result  so we will use method Is_ok as return cause if the query excuted successfully the value will be true
+           // and that what we will return and if the query falied to excute then it will return false and that what we will return
+           result.is_ok()
+       }
+    /// used to excute sql query and get one cell of data
+    pub fn excute_and_get_cell<T:FromRow>(mut self,query:&str,params:Params)->Option<T>
+    {
+
+        //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
+        let statement=match self.connection.prep(query)       
+        {
             Ok(data) => data,
             Err(err_msg) => 
             {
                 log(&format!("Error on line {} in db_context: {}",line!(),err_msg));
-                return false;
+                return None;
             },
         };   
         //excute the paramitrized query with exec_first which will return one result as result<option<T>>
-        let result=   self.connection.exec_first::<i32, Statement, Params>(statement,params!("user_name"=>username,"pass_word"=>password));
-      // we used match pattren to extact the value if the value successfuly exctracted then store it in result var if it is not log the error and 
-      // return false to the caller as indicator that checking user info didnt go well and to prevent the system from considering the information as right and login unauthorized user
-        let result=  match result {
+        let result=   self.connection.exec_first::<T, Statement, Params>(statement,params);
+        // we used match pattren to extact the value if the value successfuly exctracted then store it in result var if it is not log the error and 
+        // return false to the caller as indicator that checking user info didnt go well and to prevent the system from considering the information as right and login unauthorized user
+        let result=  match result 
+        {
             Ok(data) => data,
             Err(err_msg) => 
             {
                 log(&format!("Error on line {} in db context :{}",line!(),err_msg));
-                return false;
+                return None;
             },
-        };
-        //  in the previous match we extracted from result in this match we will exctract from option
+        };     
+        result  
+
+    }
+    /// this method check if user is exist 
+    pub fn is_user_exist(self,username:&str,password:&str)->bool
+    {
+        // get the count of user that match the information provided by the user
+      let  result= self.excute_and_get_cell::<i32>("SELECT COUNT(*) FROM ACCOUNTS WHERE USERNAME=:user_name AND PASSWORD=:pass_word",params!("user_name"=>username,"pass_word"=>password));       
+      
         let result = match result
         {
             Some(data) => data,
-            None => {
+            None =>
+            {
                 log(&format!("Error on line {} in db context : no data recived",line!()));
                 return false;
             },
@@ -105,6 +134,14 @@ impl DbContext
         result==1 
 
     }     
+     /// this method check if user is exist 
+     pub fn create_user(self,name:&str,username:&str,email:&str,password:&str)->bool
+     {
+       // insert the new user information into the database
+       let  is_successed= self.excute("INSERT INTO ACCOUNTS (NAME,USERNAME,EMAIL,PASSWORD) VALUES(:name,:user_name,:email,:pass_word)",params!("name"=>name,"user_name"=>username,"email"=>email,"pass_word"=>password));       
+       // return the result
+       is_successed    
+     }     
     /// this method used to create an object that contain the necessary information to connect to the database
     fn create_connection_information_object(server_ip:&str,username:&str,password:&str,db:&str)->OptsBuilder
     {

@@ -1,6 +1,6 @@
 use actix_web::{App, HttpServer};
 
-use self::db_context::{DbContext};
+
 
 #[path = "web_server/storage/file_manger.rs"]
 mod file_manger;
@@ -24,8 +24,8 @@ pub async fn start_the_server()-> std::io::Result<()>
 
     let db= db_context::DbContext::new("127.0.0.1","root","","ali_miracle").unwrap();
     
-    db.is_user_exist(&"Ali",&"Ali");
-  
+   let r= db.create_user(&"1",&"2",&"3",&"4");
+  print!("{}",r);
     // start new instance form the server and set the main there api endpoint method 
     HttpServer::new(|| {
         App::new()

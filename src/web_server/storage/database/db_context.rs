@@ -5,6 +5,7 @@ use mysql::*;
 use mysql::prelude::*;
 
 use super::loger::log;
+mod db_module;
 
 pub struct DbContext
 {
@@ -60,8 +61,8 @@ impl DbContext
       
       
     }
-       /// used to excute sql query and get data
-       pub fn excute(mut self,query:&str,params:Params)->bool
+       /// used to excute sql query with parameters
+       pub fn excute_parameterized(mut self,query:&str,params:Params)->bool
        {
    
            //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
@@ -81,8 +82,11 @@ impl DbContext
            // and that what we will return and if the query falied to excute then it will return false and that what we will return
            result.is_ok()
        }
+
+ 
+
     /// used to excute sql query and get one cell of data
-    pub fn excute_and_get_cell<T:FromRow>(mut self,query:&str,params:Params)->Option<T>
+    pub fn get_cell<T:FromRow>(mut self,query:&str,params:Params)->Option<T>
     {
 
         //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
@@ -98,8 +102,7 @@ impl DbContext
         //excute the paramitrized query with exec_first which will return one result as result<option<T>>
         let result=   self.connection.exec_first::<T, Statement, Params>(statement,params);
         // we used match pattren to extact the value if the value successfuly exctracted then store it in result var if it is not log the error and 
-        // return false to the caller as indicator that checking user info didnt go well and to prevent the system from considering the information as right and login unauthorized user
-        let result=  match result 
+         let result=  match result 
         {
             Ok(data) => data,
             Err(err_msg) => 
@@ -115,8 +118,8 @@ impl DbContext
     pub fn is_user_exist(self,username:&str,password:&str)->bool
     {
         // get the count of user that match the information provided by the user
-      let  result= self.excute_and_get_cell::<i32>("SELECT COUNT(*) FROM ACCOUNTS WHERE USERNAME=:user_name AND PASSWORD=:pass_word",params!("user_name"=>username,"pass_word"=>password));       
-      
+        let  result= self.get_cell::<i32>("SELECT COUNT(*) FROM ACCOUNTS WHERE USERNAME=:user_name AND PASSWORD=:pass_word",params!("user_name"=>username,"pass_word"=>password));       
+        // return false to the caller as indicator that checking user info didnt go well and to prevent the system from considering the information as right and login unauthorized user
         let result = match result
         {
             Some(data) => data,
@@ -134,14 +137,46 @@ impl DbContext
         result==1 
 
     }     
-     /// this method check if user is exist 
-     pub fn create_user(self,name:&str,username:&str,email:&str,password:&str)->bool
-     {
+    /// this method will create a new user in the database
+    pub fn create_user(self,name:&str,username:&str,email:&str,password:&str,is_owner:&str)->bool
+    {
        // insert the new user information into the database
-       let  is_successed= self.excute("INSERT INTO ACCOUNTS (NAME,USERNAME,EMAIL,PASSWORD) VALUES(:name,:user_name,:email,:pass_word)",params!("name"=>name,"user_name"=>username,"email"=>email,"pass_word"=>password));       
+       let  is_successed= self.excute_parameterized("INSERT INTO ACCOUNTS (NAME,USERNAME,EMAIL,PASSWORD,ISOWNER) VALUES(:name,:user_name,:email,:pass_word,:is_owner)",params!("name"=>name,"user_name"=>username,"email"=>email,"pass_word"=>password,"is_owner"=>is_owner));       
        // return the result
        is_successed    
-     }     
+    }
+    /// this method will update the user specify by the id in the database
+    pub fn update_user(self,id:&str,name:&str,username:&str,email:&str,password:&str,is_owner:&str)->bool
+    {
+        // update the user information in the database
+        let  is_successed= self.excute_parameterized("UPDATE ACCOUNTS SET NAME=:name,USERNAME=:user_name,EMAIL=:email,PASSWORD=:pass_word,ISOWNER=:is_owner WHERE ID=:id",params!("name"=>name,"user_name"=>username,"email"=>email,"pass_word"=>password,"is_owner"=>is_owner,"id"=>id));       
+        // return the result
+        is_successed    
+    }    
+     /// this method will delete the user specify by the id from the database ,if the user wasn't an admin
+     pub fn delete_user(self,id:&str)->bool
+     {
+         // update the user information in the database
+         let  is_successed= self.excute_parameterized("DELETE FROM ACCOUNTS WHERE ID=:id and ISOWNER=0",params!("id"=>id));       
+         // return the result
+         is_successed    
+     }   
+     /// this method will get all users as Vec of Struct User in db_module
+    pub fn get_users(mut self)->Result<Vec<db_module::USER>>
+    {
+        // we will preforme a select query and map the result to a struct name User in db_module 
+        // the function result will be  result struct that contain a vec of the type User which will contain all the users information
+         self.connection.query_map("SELECT  ID,NAME,USERNAME,EMAIL,ISOWNER FROM ACCOUNTS ",
+            |(id,name,username,email,is_owner)|
+            {
+                db_module::USER
+                { 
+                id: id, name: name, username: username, email: email, password:None, is_owner: is_owner 
+                }
+            }
+        )   
+
+    }  
     /// this method used to create an object that contain the necessary information to connect to the database
     fn create_connection_information_object(server_ip:&str,username:&str,password:&str,db:&str)->OptsBuilder
     {

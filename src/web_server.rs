@@ -23,9 +23,8 @@ pub async fn start_the_server()-> std::io::Result<()>
 {
 
     let db= db_context::DbContext::new("127.0.0.1","root","","ali_miracle").unwrap();
-    
-   let r= db.create_user(&"1",&"2",&"3",&"4");
-  print!("{}",r);
+    let r= db.get_users();
+    print!("{:?}",r);
     // start new instance form the server and set the main there api endpoint method 
     HttpServer::new(|| {
         App::new()

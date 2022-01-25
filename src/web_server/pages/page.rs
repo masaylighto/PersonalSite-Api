@@ -1,9 +1,6 @@
 /// this page represent the route for static html file
-
 use actix_web::{HttpResponse,http::{StatusCode}, get, web};
-
 use super::{file_manger, loger::log};
-
 ///this method get the static html content though the url provided by client during the http requestand return it to the user 
 #[get("/{folder}/{file}")]
 // first the parameter path:web::Path<(String,String)> mean that path gonna have two value of string the first one is the folder and the other one is the file name

@@ -1,7 +1,4 @@
 use actix_web::{App, HttpServer};
-
-
-
 #[path = "web_server/storage/file_manger.rs"]
 mod file_manger;
 #[path = "web_server/parsers/form_parser.rs"]
@@ -14,16 +11,12 @@ mod image;
 mod loger;
 #[path = "web_server/storage/database/db_context.rs"]
 mod db_context;
-
-
-
 /// Run the web server
 #[actix_web::main]
 pub async fn start_the_server()-> std::io::Result<()>
 {
-
     let db= db_context::DbContext::new("127.0.0.1","root","","ali_miracle").unwrap();
-    let r= db.get_users();
+    let r= db.get_users(Some(1),Some(0));
     print!("{:?}",r);
     // start new instance form the server and set the main there api endpoint method 
     HttpServer::new(|| {
@@ -38,5 +31,4 @@ pub async fn start_the_server()-> std::io::Result<()>
     .bind("127.0.0.1:81")?
     .run()
     .await
-
 }

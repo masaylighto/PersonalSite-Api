@@ -2,9 +2,7 @@ use actix_multipart::{Multipart};
 use actix_web::{ HttpResponse, get, Responder, post, web};
 use futures_util::TryStreamExt;
 use crate::web_server::{file_manger, form_parser};
-
 use super::loger::log;
-
 /// this method return  buffer of bytes that represent the requested img to the client
 #[get("{folder}/images/{file}")]
 // web::Path<(String,String)> paramter will parse the http request of type get 
@@ -27,9 +25,7 @@ async fn dynamic_img_loader(url:web::Path<(String,String)>) -> impl Responder
             return HttpResponse::Ok().body(err_msg);
         },
    }
-
 }
-
 /// Save Image that Posted by client with  method="post" enctype="multipart/form-data" 
 /// the post should contain three field the first one is the directory you want to store the img into it
 /// second the img name third the img bytes 
@@ -37,7 +33,6 @@ async fn dynamic_img_loader(url:web::Path<(String,String)>) -> impl Responder
 // the multipart parameter represnt the form buffer and you can get the data from it one by ine throw the method try_next
 async fn save_image(mut payload: Multipart) -> impl Responder 
 {  
-
     // here we use the form_parser::get_string method which is responsible to get a string out of the post field we pass into it the first field using try next method 
     // if you are wandering why we use await method ,that is because all the method in this app are async method
     // the get strng return Option<String> and that why we used Match pattern on it to extract the data

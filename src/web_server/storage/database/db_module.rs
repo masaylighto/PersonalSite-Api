@@ -1,7 +1,6 @@
 #[derive(Debug)]
 pub struct USER
 {
-
    pub id:i32,
    pub name:Option<String>,
    pub username:Option<String>,    

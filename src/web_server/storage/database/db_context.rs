@@ -1,15 +1,10 @@
-/// this modual hold the responsiblity to deal with the database
-
-
+/// this module hold the responsiblity to deal with the database
 use mysql::*;
 use mysql::prelude::*;
-
 use super::loger::log;
 mod db_module;
-
 pub struct DbContext
 {
-
      connection: PooledConn,
 }
 impl DbContext 
@@ -57,14 +52,10 @@ impl DbContext
                 return None;
             },
         }
-
-      
-      
     }
        /// used to excute sql query with parameters
        pub fn excute_parameterized(mut self,query:&str,params:Params)->bool
        {
-   
            //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
            let statement=match self.connection.prep(query)       
            {
@@ -82,13 +73,9 @@ impl DbContext
            // and that what we will return and if the query falied to excute then it will return false and that what we will return
            result.is_ok()
        }
-
- 
-
     /// used to excute sql query and get one cell of data
     pub fn get_cell<T:FromRow>(mut self,query:&str,params:Params)->Option<T>
     {
-
         //create a Paramiterized query this method will return option so we will use match pattren and if it did not successed then we end th method
         let statement=match self.connection.prep(query)       
         {
@@ -112,7 +99,6 @@ impl DbContext
             },
         };     
         result  
-
     }
     /// this method check if user is exist 
     pub fn is_user_exist(self,username:&str,password:&str)->bool
@@ -135,7 +121,6 @@ impl DbContext
         //if the result is above zero 1 then there more than one user with this information and that might indecate a sql injection in the query
         // so we compare result to 1 and thus return bool as result to the caller
         result==1 
-
     }     
     /// this method will create a new user in the database
     pub fn create_user(self,name:&str,username:&str,email:&str,password:&str,is_owner:&str)->bool
@@ -161,22 +146,52 @@ impl DbContext
          // return the result
          is_successed    
      }   
-     /// this method will get all users as Vec of Struct User in db_module
-    pub fn get_users(mut self)->Result<Vec<db_module::USER>>
+     /// this method will get all users or specific count of user as Vec of Struct User in db_module
+     /// if the limit paramter is None then the method will get all user
+     /// and if it is not it will extact it value and specify the amont of row it will select
+    pub fn get_users(mut self,limit:Option<i32>,offset:Option<i32>)->Result<Vec<db_module::USER>>
     {
+        // this is a mapping function used to map the result of a select query into a User struct
+        let map_function=   |(id,name,username,email,is_owner)|
+        {
+            db_module::USER
+            { 
+            id: id, name: name, username: username, email: email, password:None, is_owner: is_owner 
+            }
+        };
         // we will preforme a select query and map the result to a struct name User in db_module 
         // the function result will be  result struct that contain a vec of the type User which will contain all the users information
-         self.connection.query_map("SELECT  ID,NAME,USERNAME,EMAIL,ISOWNER FROM ACCOUNTS ",
-            |(id,name,username,email,is_owner)|
-            {
-                db_module::USER
-                { 
-                id: id, name: name, username: username, email: email, password:None, is_owner: is_owner 
-                }
-            }
-        )   
+        // if there is no value in count then we just select all row
+        if limit.is_none()
+        {
+          return  self.connection.query_map("SELECT  ID,NAME,USERNAME,EMAIL,ISOWNER FROM ACCOUNTS ",map_function)  ;
+        }
+        // force a value to number_of_row_to_skip by extracting its value from option and set zero as value if there is none
+        let offset=match offset
+        {
+            Some(data) => data,
+            None => 0,
+        };
+        //extract rows_count value
+        let limit=limit.unwrap();
+        self.connection.exec_map("SELECT  ID,NAME,USERNAME,EMAIL,ISOWNER FROM ACCOUNTS  limit :count offset :skip  ",params!("skip"=>offset,"count"=>limit),map_function)  
 
-    }  
+    } 
+    ///get user by id  , this method will return vec that contain the user info in its first index
+    pub fn get_user_by_id(mut self,id:i32)->Result<Vec<db_module::USER>>
+    {
+       // this is a mapping function used to map the result of a select query into a User struct
+        let map_function=   |(id,name,username,email,is_owner)|
+        {
+            db_module::USER
+            { 
+            id: id, name: name, username: username, email: email, password:None, is_owner: is_owner 
+            }
+        };
+        // we will preforme a select query and map the result to a struct name User in db_module 
+        // the function result will be  result struct that contain a vec of the type User that will have the user info as user struct at it first index
+        self.connection.exec_map("SELECT  ID,NAME,USERNAME,EMAIL,ISOWNER FROM ACCOUNTS where id=:id ",params!("id"=>id),map_function)    
+    } 
     /// this method used to create an object that contain the necessary information to connect to the database
     fn create_connection_information_object(server_ip:&str,username:&str,password:&str,db:&str)->OptsBuilder
     {
@@ -186,7 +201,4 @@ impl DbContext
         .ip_or_hostname(Some(server_ip))
         .db_name(Some(db))
     }
-    
-
 }
-

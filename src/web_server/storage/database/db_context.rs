@@ -102,7 +102,6 @@ impl DbContext
         };     
         result  
     }
-
     /// this method used to create an object that contain the necessary information to connect to the database
     fn create_connection_information_object(server_ip:&str,username:&str,password:&str,db:&str)->OptsBuilder
     {

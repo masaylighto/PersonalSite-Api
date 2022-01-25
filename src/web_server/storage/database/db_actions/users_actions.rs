@@ -1,5 +1,4 @@
 ///this module have the method that deal with Accounts Table
-
 use super::{db_context::DbContext, logger::log,super::web_server::db_module};
 use mysql::*;
 use mysql::prelude::*;

@@ -15,13 +15,14 @@ mod db_context;
 mod db_module;
 #[path = "web_server/storage/database/db_actions/users_actions.rs"]
 mod user_actions;
-
+#[path = "web_server/storage/database/db_actions/skills_actions.rs"]
+mod skills_actions;
 /// Run the web server
 #[actix_web::main]
 pub async fn start_the_server()-> std::io::Result<()>
 {
     let db= db_context::DbContext::new("127.0.0.1","root","","ali_miracle").unwrap();
-    let r= db.get_users(Some(1),Some(0));    
+    let r= db.get_skill_by_category("3");    
     print!("{:?}",r);
     // start new instance form the server and set the main there api endpoint method 
     HttpServer::new(|| {

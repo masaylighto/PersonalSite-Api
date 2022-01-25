@@ -7,16 +7,21 @@ mod form_parser;
 mod page;
 #[path = "web_server/api_endpoints/image.rs"]
 mod image;
-#[path = "web_server/storage/loger.rs"]
-mod loger;
+#[path = "web_server/storage/logger.rs"]
+mod logger;
 #[path = "web_server/storage/database/db_context.rs"]
 mod db_context;
+#[path = "web_server/storage/database/db_module.rs"]
+mod db_module;
+#[path = "web_server/storage/database/db_actions/users_actions.rs"]
+mod user_actions;
+
 /// Run the web server
 #[actix_web::main]
 pub async fn start_the_server()-> std::io::Result<()>
 {
     let db= db_context::DbContext::new("127.0.0.1","root","","ali_miracle").unwrap();
-    let r= db.get_users(Some(1),Some(0));
+    let r= db.get_users(Some(1),Some(0));    
     print!("{:?}",r);
     // start new instance form the server and set the main there api endpoint method 
     HttpServer::new(|| {
@@ -27,7 +32,7 @@ pub async fn start_the_server()-> std::io::Result<()>
             .service(page::dynamic_assets_loader) // this service is responsible for giving the js,cs file to the client
             .service(page::re_route_to_index) // re route the / into home/home.html as it is the first page in the website
     })
-    // bind the server into the specifed ip address
+    // bind the server into the specified ip address
     .bind("127.0.0.1:81")?
     .run()
     .await
